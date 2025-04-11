@@ -6,7 +6,7 @@ class UserRepository {
   constructor(parameters) {}
 
   async addUser(userInfo) {
-    const { name, email, password,role } = userInfo;
+    const { name, email, password, role, city, street, pin } = userInfo;
 
     try {
       const isUserExists = await prisma.user.findUnique({ where: { email } });
@@ -17,7 +17,13 @@ class UserRepository {
       }
       const hashedPassword = await bcrypt.hash(password, 10);
       const user = await prisma.user.create({
-        data: { name, email, password: hashedPassword,role },
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          role,
+          addresses: { create: [{ street, city, pin }] },
+        },
       });
     } catch (error) {
       throw error;
@@ -55,15 +61,39 @@ class UserRepository {
     }
   }
 
-  async update(userInfo) {
-    const { name, email } = userInfo;
+  async updateUser(userInfo) {
+    const { email, name, role, street, city, pin } = userInfo;
 
     try {
-      const isUserExists = await prisma.user.findUnique({ where: { email } });
+      const user = await prisma.user.findUnique({
+        where: { email },
+        include: { addresses: true },
+      });
+      const addr = user.addresses[0];
 
-      if (isUserExists) {
-        throw new AppError("user already exists", 409);
+      if (!user) {
+        throw new AppError("user not found", 404);
       }
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          name,
+          role,
+          addresses: {
+            update: [
+              {
+                where: { id: addr.id },
+                data: {
+                  city,
+                  street,
+                  pin,
+                },
+              },
+            ],
+          },
+        },
+      });
     } catch (error) {
       throw error;
     } finally {
@@ -84,7 +114,9 @@ class UserRepository {
   async findAll() {
     console.log("find all");
     try {
-      const users = await prisma.user.findMany();
+      const users = await prisma.user.findMany({
+        include: { addresses: true },
+      });
       return users;
     } catch (error) {
       throw error;
@@ -95,7 +127,10 @@ class UserRepository {
 
   async findUserById(id) {
     try {
-     return await prisma.user.findUnique({ where: { id: parseInt(id) } });
+      return await prisma.user.findUnique({
+        where: { id: parseInt(id) },
+        include: { addresses: true },
+      });
     } catch (error) {
       throw error;
     } finally {
