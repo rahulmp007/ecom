@@ -7,43 +7,112 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 enum Role {
-  USER
+  CUSTOMER
   ADMIN
 }
 
-model Product {
-  id          Int     @id @default(autoincrement())
-  name        String  @db.VarChar(100)
-  description String?
-  price       Decimal @db.Decimal(10, 2)
-  stock       Int
-  orderItems  OrderItem[]
-}
-
 model User {
-  id       Int    @id @default(autoincrement())
-  name     String @db.VarChar(100)
-  email    String @unique @db.VarChar(100)
-  password String
-  role     Role @default(USER)
-  orders   Order[]
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  password  String
+  role      Role @default(CUSTOMER)
+  addresses Address[]
+  orders    Order[]
+  reviews   Review[]
+  cart      Cart?
 }
 
+model Product {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  reviews Review[]
+
+  OrderItem OrderItem[]
+  CartItem  CartItem[]
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String
+  products Product[]
+}
 
 model Order {
-  id         Int @id @default(autoincrement())
-  userId     Int
-  user       User @relation(fields:[userId],references:[id])
+  id         Int         @id @default(autoincrement())
   orderItems OrderItem[]
-} 
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  payment Payment?
+}
 
 model OrderItem {
-  id          Int @id @default(autoincrement())
-  orderId     Int
-  order       Order @relation(fields:[orderId],references:[id])
-  productId   Int
-  product     Product @relation(fields:[productId],references:[id])
-  quantity    Int
-} 
+  id       Int @id @default(autoincrement())
+  price    Int
+  quantity Int
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  orderId Int
+  order   Order @relation(fields: [orderId], references: [id])
+}
+
+model Address {
+  id Int @id @default(autoincrement())
+  street String
+  city String
+  pin String
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+}
+
+model Review {
+  id          Int    @id @default(autoincrement())
+  description String
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Payment {
+  id   Int    @id @default(autoincrement())
+  note String
+
+  amount Int
+  method String
+
+  paidAt DateTime @default(now())
+
+  orderId Int   @unique
+  order   Order @relation(fields: [orderId], references: [id])
+}
+
+model Cart {
+  id     Int        @id @default(autoincrement())
+  items  CartItem[]
+  userId Int        @unique
+  user   User       @relation(fields: [userId], references: [id])
+}
+
+model CartItem {
+  id        Int     @id @default(autoincrement())
+  quantity  Int
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  cartId Int
+  cart   Cart @relation(fields: [cartId], references: [id])
+
+  @@unique([cartId, productId])
+}

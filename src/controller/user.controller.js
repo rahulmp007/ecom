@@ -16,12 +16,15 @@ class UserController {
 
   async createUser(req, res, next) {
     try {
-      const { name, email, password, role } = req.body;
+      const { name, email, password, role, city, street, pin } = req.body;
       await userRepo.addUser({
         name,
         email,
         password,
         role,
+        city,
+        street,
+        pin,
       });
       res.status(200).json({ status: "success", message: "user created" });
     } catch (error) {
@@ -39,8 +42,11 @@ class UserController {
   }
   async updateUser(req, res, next) {
     try {
-      const user = await userRepo.updateUser(req.body);
-      res.status(200).json({ message: "login successfull", user: user });
+      const user = await userRepo.updateUser({
+        ...req.body,
+        email: req.user.email,
+      });
+      res.status(200).json({ message: "user updated", user: user });
     } catch (error) {
       next(error);
     }
@@ -58,8 +64,8 @@ class UserController {
   async getUserById(req, res, next) {
     try {
       const user = await userRepo.findUserById(req.params.userId);
-      console.log(`user`,user);
-      
+      console.log(`user`, user);
+
       if (!user) {
         return res.status(200).json({ message: "user not exists" });
       }
