@@ -3,6 +3,9 @@ const client = require("../prisma/prisma");
 const AppError = require("../error/app_error");
 
 const authenticateUser = async (req, res, next) => {
+
+ 
+  
   const token = req.headers.authorization?.split(" ")[1];
   console.log(token);
 

@@ -1,3 +1,5 @@
+const productRepository = require("../repository/product.repository");
+
 class ProductController {
   constructor() {}
 
@@ -9,7 +11,11 @@ class ProductController {
   }
 
   async createProduct(req, res, next) {
+    
+    
     try {
+      await productRepository.addProduct(req.body);
+      res.status(200).json({ status: "success", message: "product created" });
     } catch (error) {
       next(error);
     }

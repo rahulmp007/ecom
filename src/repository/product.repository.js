@@ -1,17 +1,34 @@
+const AppError = require("../error/app_error");
+const prisma = require("../prisma/prisma");
+const bcrypt = require("bcryptjs");
+const { generateToken } = require("../utils/token_util");
+
 class ProductRepository {
   constructor() {}
 
   async getAll() {
     try {
+      return await prisma.product.findMany();
     } catch (error) {
       next(error);
     }
   }
 
-  async addProduct() {
+  async addProduct(productInfo) {
+    console.log(productInfo);
+    
+    const { name, description, price, stock } = productInfo;
     try {
+     const product =  await prisma.product.create({
+        data: {
+          name,
+          description,
+          price,
+          stock,
+        },
+      });
     } catch (error) {
-      next(error);
+      throw error;
     }
   }
 
