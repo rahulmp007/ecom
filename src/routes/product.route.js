@@ -16,6 +16,14 @@ productRouter
     authenticateUser,
     authorizeRoles(["admin"]),
     productController.createProduct
+  );
+
+productRouter
+  .route("/:productId")
+  .get(
+    authenticateUser,
+    authorizeRoles(["admin", "customer"]),
+    productController.getProductById
   )
   .put(
     authenticateUser,
@@ -27,14 +35,6 @@ productRouter
     authenticateUser,
     authorizeRoles(["admin"]),
     productController.deleteProductById
-  );
-
-productRouter
-  .route("/:productId")
-  .get(
-    authenticateUser,
-    authorizeRoles(["admin", "user"]),
-    productController.getProductById
   );
 
 module.exports = productRouter;
