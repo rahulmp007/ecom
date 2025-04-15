@@ -4,6 +4,8 @@ const productRouter = express.Router();
 
 const authenticateUser = require("../middleware/authenticate_user");
 const authorizeRoles = require("../middleware/authorize_roles");
+const { createProductSchema } = require("../utils/validation_schema");
+const validate = require("../middleware/validate");
 
 productRouter
   .route("/")
@@ -15,6 +17,7 @@ productRouter
   .post(
     authenticateUser,
     authorizeRoles(["admin"]),
+    validate(createProductSchema),
     productController.createProduct
   );
 
