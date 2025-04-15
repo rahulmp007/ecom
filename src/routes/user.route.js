@@ -5,6 +5,8 @@ const userRouter = express.Router();
 const userController = require("../controller/user.controller");
 const authenticateUser = require("../middleware/authenticate_user");
 const authorizeRoles = require("../middleware/authorize_roles");
+const validate = require("../middleware/validate");
+const { createUserSchema } = require("../utils/validation_schema");
 
 /**
  * @swagger
@@ -125,7 +127,7 @@ const authorizeRoles = require("../middleware/authorize_roles");
 userRouter
   .route("/")
   .get(authenticateUser, authorizeRoles(["admin"]), userController.getAllUsers)
-  .post(userController.createUser)
+  .post(validate(createUserSchema), userController.createUser)
   .put(authenticateUser, userController.updateUser)
   .delete(authenticateUser, userController.deleteAllUsers);
 
