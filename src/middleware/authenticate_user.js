@@ -1,27 +1,35 @@
-const { verifyToken } = require("../utils/token_util");
+const { verifyAccessToken } = require("../utils/token_util");
 const client = require("../prisma/prisma");
 const AppError = require("../error/app_error");
 
 const authenticateUser = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.split(" ")[1];
 
- 
-  
-  const token = req.headers.authorization?.split(" ")[1];
-  console.log(token);
+    if (!token) {
+      return res.status(401).json({ message: "Token missing or invalid" });
+    }
 
-  if (!token) {
-    res.status(401).json({
-      messge: "invalid token",
+    // Token verification
+    const decoded = verifyAccessToken(token);
+    console.log("Decoded token:", decoded);
+
+    // Fetch user from DB
+    const currentUser = await client.user.findFirst({
+      where: { id: decoded.id },
     });
-    return;
-  }
 
-  const result = verifyToken(token);
-  const currentUser = await client.user.findFirst({
-    where: { id: result.id },
-  });
-  req.user = currentUser;
-  next();
+    if (!currentUser) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    req.user = currentUser;
+    next();
+  } catch (error) {
+    console.error("Auth Middleware Error:", error.message);
+    return res.status(403).json({ message: "Invalid or expired token" });
+  }
 };
 
 module.exports = authenticateUser;

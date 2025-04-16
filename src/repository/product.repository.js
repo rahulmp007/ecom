@@ -6,13 +6,29 @@ const { generateToken } = require("../utils/token_util");
 class ProductRepository {
   constructor() {}
 
+  /**
+   * Retrieves all products.
+   * @returns {Promise<Array>} Array of product objects
+   */
   async getAll() {
     try {
       return await prisma.product.findMany();
     } catch (error) {
-      next(error);
+      throw error;
     }
   }
+
+  /**
+   * Adds a new product and links it to a category.
+   * If category doesn't exist, it will be created.
+   * @param {Object} productInfo
+   * @param {string} productInfo.name
+   * @param {string} productInfo.description
+   * @param {number} productInfo.price
+   * @param {number} productInfo.stock
+   * @param {string} productInfo.category
+   * @returns {Promise<Object>} The created product
+   */
 
   async addProduct(productInfo) {
     console.log(productInfo);
@@ -43,15 +59,27 @@ class ProductRepository {
     }
   }
 
+  /**
+   * Edits a product's information.
+   * @param {Object} productInfo
+   * @param {number} productInfo.pId - Product ID
+   * @param {string} [productInfo.name]
+   * @param {string} [productInfo.description]
+   * @param {number} [productInfo.price]
+   * @param {number} [productInfo.stock]
+   * @param {number} [productInfo.categoryId]
+   * @returns {Promise<Object>} Updated product object
+   */
   async editProduct(productInfo) {
     try {
-      const product = prisma.product.findUnique({
-        where: { id: parseInt(productId) },
+      const { name, description, price, stock, categoryId, pId } = productInfo;
+
+      const product = await prisma.product.findUnique({
+        where: { id: parseInt(pId) },
       });
       if (!product) {
         throw new AppError("product not found", 404);
       }
-      const { name, description, price, stock, categoryId, pId } = productInfo;
 
       const updateInfo = {};
 
@@ -78,6 +106,12 @@ class ProductRepository {
     }
   }
 
+  /**
+   * Fetches a product by its ID.
+   * @param {number} productId - The product ID
+   * @returns {Promise<Object>} Product object
+   * @throws {AppError} If product not found
+   */
   async fetchProductById(productId) {
     try {
       const product = prisma.product.findUnique({
@@ -92,6 +126,12 @@ class ProductRepository {
     }
   }
 
+  /**
+   * Deletes a product by its ID.
+   * @param {number} productId - Product ID to delete
+   * @returns {Promise<void>}
+   * @throws {AppError} If product not found
+   */
   async deleteProductById(productId) {
     try {
       const product = await prisma.product.findUnique({
